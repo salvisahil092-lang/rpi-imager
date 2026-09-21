@@ -15,7 +15,7 @@ jobs:
           java-version: '17'
 
       - name: Qt host tools
-        uses: jurplel/install-qt-action@v4
+        uses: jurplel/install-qt-action@v4.3.1
         with:
           version: '6.9.*'
           host: linux
@@ -26,7 +26,7 @@ jobs:
       - run: echo "QT_HOST=$QT_ROOT_DIR" >> "$GITHUB_ENV"
 
       - name: Qt for Android
-        uses: jurplel/install-qt-action@v4
+        uses: jurplel/install-qt-action@v4.3.1
         with:
           version: '6.9.*'
           host: linux
