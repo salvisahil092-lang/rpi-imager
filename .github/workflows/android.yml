@@ -18,7 +18,7 @@ jobs:
         uses: jurplel/install-qt-action@v4.3.1
         with:
           version: '6.9.*'
-          host: linux
+          host: all_os
           target: desktop
           arch: linux_gcc_64
           cache: true
@@ -29,7 +29,7 @@ jobs:
         uses: jurplel/install-qt-action@v4.3.1
         with:
           version: '6.9.*'
-          host: linux
+          host: all_os
           target: android
           arch: android_arm64_v8a
           cache: true
