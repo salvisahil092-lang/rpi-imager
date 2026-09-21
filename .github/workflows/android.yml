@@ -1,0 +1,68 @@
+name: Android build
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Qt host tools
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.*'
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          cache: true
+
+      - run: echo "QT_HOST=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+
+      - name: Qt for Android
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.*'
+          host: linux
+          target: android
+          arch: android_arm64_v8a
+          cache: true
+
+      - name: Android SDK and NDK
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "ndk;27.2.12479018" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Configure
+        run: |
+          set -o pipefail
+          "$QT_ROOT_DIR/bin/qt-cmake" -S src -B build -G Ninja \
+            -DQT_HOST_PATH="$QT_HOST" \
+            -DANDROID_SDK_ROOT="$ANDROID_HOME" \
+            -DANDROID_NDK_ROOT="$ANDROID_HOME/ndk/27.2.12479018" \
+            -DCMAKE_BUILD_TYPE=Release 2>&1 | tee build.log
+
+      - name: Build APK
+        run: |
+          set -o pipefail
+          cmake --build build --target apk 2>&1 | tee -a build.log
+
+      - name: Error summary
+        if: failure()
+        run: |
+          { echo '```'; tail -n 80 build.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-build
+          path: |
+            build.log
+            build/**/*.apk
